@@ -34,15 +34,6 @@ async function createServiceProvider(
 
   await dbConnect();
 
-  const existingServiceProvider = await ServiceProviderModel.findById(userId);
-
-  if (existingServiceProvider) {
-    const message = "Stripe Service Provider has already been registered";
-    logger.error(message);
-
-    return res.status(400).json({ message });
-  }
-
   const emailAddressResult = getPrimaryEmailAddress(user!);
 
   if (emailAddressResult.type === "error") {
@@ -54,28 +45,40 @@ async function createServiceProvider(
     return res.status(500).end("Internal Server Error");
   }
 
-  const stripeAccount = await createStripeConnectAccount({
-    userId,
-    email: emailAddressResult.email,
-  });
-  const serviceProviderId = stripeAccount.id;
+  let serviceProviderId: string;
+  const existingServiceProvider = await ServiceProviderModel.findById(userId);
 
-  const newServiceProvider = await ServiceProviderModel.create({
-    _id: userId,
-    serviceProviderId,
-  });
+  if (!existingServiceProvider) {
+    const stripeAccount = await createStripeConnectAccount({
+      userId,
+      email: emailAddressResult.email,
+    });
+
+    serviceProviderId = stripeAccount.id;
+
+    await ServiceProviderModel.create({
+      _id: userId,
+      serviceProviderId,
+    });
+
+    logger.info(
+      { serviceProviderId, userId },
+      `Created Stripe Connect Account for ${userId}`
+    );
+  } else {
+    const message = "Stripe Service Provider has already been registered";
+    logger.error(message);
+    serviceProviderId = existingServiceProvider.serviceProviderId;
+  }
 
   logger.info(
-    { serviceProvider: newServiceProvider },
+    { serviceProviderId },
     "Generating Stripe Connect Onboarding Link"
   );
 
   const stripeConnectLink = await createStripeConnectRedirectLink(
     serviceProviderId
   );
-
-  const message = `Successfully Created Stripe Service Provider for ${userId}.`;
-  logger.info({ serviceProviderId, url: stripeConnectLink.url }, message);
 
   await clerkClient.users.updateUser(userId, {
     publicMetadata: {
@@ -87,10 +90,9 @@ async function createServiceProvider(
   });
 
   return res.status(200).json({
-    data: newServiceProvider,
+    data: { serviceProviderId },
     message:
-      message +
-      " Please follow the redirect link to complete onboarding via Stripe.",
+      "Please follow the redirect link to complete onboarding via Stripe.",
     redirect: stripeConnectLink.url,
   });
 }
