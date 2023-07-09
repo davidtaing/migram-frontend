@@ -9,41 +9,54 @@ import { stripe } from "@/backend/services/payments";
 import { getPrimaryEmailAddress } from "@/backend/services/users";
 import { UserMetadata } from "@/backend/services/users/types";
 
-const logger = pino({ name: "api/customers" });
+const logger = pino({ name: "/src/pages/api/customers.ts" });
+
+const ERRORS = {
+  METHOD_NOT_SUPPORTED: "Method Not Supported",
+  AUTHENTICATION_FAILED: "Authentication Failed",
+  PROVIDER_SIGNUP_PROHIBITED: "Service Providers cannot sign up as Customers",
+  STRIPE_CUSTOMER_ALREADY_REGISTERED:
+    "Stripe Customer has already been registered",
+  PRIMARY_EMAIL_MISSING: "Error getting primary email address for user",
+} as const;
 
 async function createStripeCustomer(req: NextApiRequest, res: NextApiResponse) {
   const authResult = await authenticate(req);
 
-  if (authResult.type === "error")
+  if (authResult.type === "error") {
+    logger.error({ authResult }, ERRORS.AUTHENTICATION_FAILED);
     return res.status(authResult.status).json({ message: authResult.message });
+  }
 
   const { user, userId } = authResult;
 
   const userMetadata = user.publicMetadata as UserMetadata;
 
-  if (userMetadata.role === "service-provider")
-    return res.status(400).json({
-      message: "Bad Request: Service Providers cannot sign up as Customers",
+  if (userMetadata.role === "service-provider") {
+    logger.error(ERRORS.PROVIDER_SIGNUP_PROHIBITED);
+    return res.status(403).json({
+      message: ERRORS.PROVIDER_SIGNUP_PROHIBITED,
     });
+  }
 
   const existingCustomer = await CustomerModel.findById(userId);
 
   if (existingCustomer) {
-    const message = "Stripe Customer has already been registered";
-    logger.error(message);
-
-    return res.status(400).json({ message });
+    logger.error(ERRORS.STRIPE_CUSTOMER_ALREADY_REGISTERED);
+    return res
+      .status(400)
+      .json({ message: ERRORS.STRIPE_CUSTOMER_ALREADY_REGISTERED });
   }
 
   const emailAddressResult = getPrimaryEmailAddress(user!);
 
   if (emailAddressResult.type === "error") {
-    logger.error(
-      { userId: user.id },
-      "Error getting primary email address for user"
-    );
+    logger.error({ userId: user.id }, ERRORS.PRIMARY_EMAIL_MISSING);
 
-    return res.status(500).end("Internal Server Error");
+    return res.status(500).send({
+      message:
+        "We failed to retrieve an email address from our end. Please try again later.",
+    });
   }
 
   const params = {
@@ -79,7 +92,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method !== "POST")
-    return res.status(405).json({ message: "Method Not Supported" });
+    return res.status(405).json({ message: ERRORS.METHOD_NOT_SUPPORTED });
 
   await dbConnect();
   return await createStripeCustomer(req, res);

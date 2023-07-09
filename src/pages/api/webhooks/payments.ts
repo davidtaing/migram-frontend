@@ -8,7 +8,16 @@ import { verifyStripeWebhook } from "@/backend/util/webhooks";
 import { TaskModel } from "@/backend/data/tasks";
 import { dbConnect } from "@/backend/services/db";
 
-const logger = pino({ name: "Payments Webhook Handler" });
+const logger = pino({ name: "/src/pages/api/webhooks/payments.ts" });
+
+const ERRORS = {
+  METHOD_NOT_SUPPORTED: "Method Not Supported",
+  INVALID_STRIPE_WEBHOOK: "Stripe Webhook Verification Failed",
+  SAVE_WEBHOOK_FAILED: "Failed to save webhook event status to database",
+  TASK_NOT_FOUND: "Task not found",
+  UPDATE_WEBHOOK_STATUS_FAILED:
+    "Failed to save webhook event status to database",
+} as const;
 
 async function handlePaymentIntentSucceeded(
   payload: Stripe.Event,
@@ -21,6 +30,7 @@ async function handlePaymentIntentSucceeded(
   [err, existingEvent] = await to(WebhookEventModel.findOne({ id }));
 
   if (existingEvent && existingEvent.status !== "rejected") {
+    logger.info({ existingEvent }, "Duplicate Webhook Event");
     return res.status(200).json({ message: "duplicate" });
   }
 
@@ -33,10 +43,11 @@ async function handlePaymentIntentSucceeded(
   );
 
   if (err) {
-    const message = "Failed to save webhook event status to database";
-    logger.error({ eventId: id }, message);
+    logger.error({ eventId: id }, ERRORS.SAVE_WEBHOOK_FAILED);
 
-    return res.status(500).json({ eventId: id, message });
+    return res
+      .status(500)
+      .json({ eventId: id, message: ERRORS.SAVE_WEBHOOK_FAILED });
   }
 
   const paymentIntent = payload.data.object as Stripe.PaymentIntent;
@@ -52,9 +63,10 @@ async function handlePaymentIntentSucceeded(
   );
 
   if (err || !task) {
-    const message = `Task Not Found: ${taskId}`;
-    logger.info({ eventId: id, err, task, taskId }, message);
-    return res.status(404).json({ eventId: id, message });
+    logger.error({ eventId: id, err, task, taskId }, ERRORS.TASK_NOT_FOUND);
+    return res
+      .status(404)
+      .json({ eventId: id, message: ERRORS.TASK_NOT_FOUND });
   }
 
   [err] = await to(
@@ -62,10 +74,11 @@ async function handlePaymentIntentSucceeded(
   );
 
   if (err) {
-    const message = "Failed to update webhook event with success status";
-    logger.error({ id }, message);
+    logger.error({ id }, ERRORS.UPDATE_WEBHOOK_STATUS_FAILED);
 
-    return res.status(500).json({ eventId: id, message });
+    return res
+      .status(500)
+      .json({ eventId: id, message: ERRORS.UPDATE_WEBHOOK_STATUS_FAILED });
   }
 
   return res.status(200).json({ taskId });
@@ -78,8 +91,9 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method !== "POST") {
+    logger.info(ERRORS.METHOD_NOT_SUPPORTED);
     res.setHeader("Allow", "POST");
-    return res.status(405).end("Method Not Allowed");
+    return res.status(405).json({ message: ERRORS.METHOD_NOT_SUPPORTED });
   }
 
   await dbConnect();
@@ -87,17 +101,24 @@ export default async function handler(
   const verificationResult = await verifyStripeWebhook(req);
 
   if (verificationResult.type === "error") {
-    return res
-      .status(verificationResult.status)
-      .json({ error: verificationResult.error });
+    logger.error(ERRORS.INVALID_STRIPE_WEBHOOK);
+
+    return res.status(verificationResult.status).json({
+      message: ERRORS.INVALID_STRIPE_WEBHOOK,
+      error: verificationResult.error,
+    });
   }
 
-  const event = verificationResult.payload?.type;
+  const eventType = verificationResult.payload.type;
 
-  switch (event) {
+  switch (eventType) {
     case "payment_intent.succeeded":
       return handlePaymentIntentSucceeded(verificationResult.payload, res);
     default:
-      return res.status(200).json({ event });
+      const message = "Skipped Stripe Webhook";
+      logger.info({ event: eventType }, message);
+      return res
+        .status(200)
+        .json({ message, type: eventType, id: verificationResult.payload.id });
   }
 }
