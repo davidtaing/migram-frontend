@@ -1,53 +1,73 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import pino from "pino";
 
 import { OfferModel } from "@/backend/data/offers";
 import { TaskModel } from "@/backend/data/tasks";
 import { authenticate } from "@/backend/middlewares/auth";
 import { dbConnect } from "@/backend/services/db";
 
+const ERRORS = {
+  METHOD_NOT_SUPPORTED: "Method Not Supported",
+  AUTHENTICATION_FAILED: "Authentication Failed",
+  OFFER_NOT_FOUND: "Offer not found",
+  OFFER_ALREADY_APPROVED: "An offer has already been approved",
+  TASK_NOT_FOUND: "The task that offer belongs to could not be found.",
+  TASK_STATUS_NOT_OPEN: "Tasks cannot be approved if the status is not 'Open'",
+  UNAUTHORIZED: "You are not allowed to access this resource",
+} as const;
+
+const logger = pino({ name: "/src/pages/api/offers/[id]/approve.ts" });
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== "POST")
-    return res.status(405).json({ message: "Method Not Supported" });
+    return res.status(405).json({ message: ERRORS.METHOD_NOT_SUPPORTED });
 
   const { id } = req.query;
 
   const authResult = await authenticate(req);
 
-  if (authResult.type === "error")
+  if (authResult.type === "error") {
+    logger.error({ authResult }, ERRORS.AUTHENTICATION_FAILED);
     return res.status(authResult.status).json({ message: authResult.message });
+  }
 
   await dbConnect();
 
   const offer = await OfferModel.findOne({ _id: id });
 
-  if (!offer) return res.status(404).json({ message: "Offer not found" });
+  if (!offer) {
+    logger.error(ERRORS.OFFER_NOT_FOUND);
+    return res.status(404).json({ message: ERRORS.OFFER_NOT_FOUND });
+  }
 
   const task = await TaskModel.findOne({ _id: offer.task });
 
-  if (!task)
-    return res
-      .status(500)
-      .json({ message: "The task that offer belongs to could not be found." });
+  if (!task) {
+    logger.error(ERRORS.TASK_NOT_FOUND);
+    return res.status(404).json({ message: ERRORS.TASK_NOT_FOUND });
+  }
 
   const isTaskOwner = authResult.userId === task?.userId;
 
-  if (!isTaskOwner)
-    return res
-      .status(403)
-      .json({ message: "You are not allowed to access this resource" });
+  if (!isTaskOwner) {
+    logger.error(ERRORS.UNAUTHORIZED);
+    return res.status(403).json({ message: ERRORS.UNAUTHORIZED });
+  }
 
-  if (task.status !== "Open")
+  if (task.status !== "Open") {
+    logger.error(ERRORS.TASK_STATUS_NOT_OPEN);
     return res.status(400).json({
-      message: "Tasks cannot be approved if the status is not 'Open'",
+      message: ERRORS.TASK_STATUS_NOT_OPEN,
     });
+  }
 
-  if (task.acceptedOffer)
-    return res
-      .status(400)
-      .json({ message: "An offer has already been approved" });
+  if (task.acceptedOffer) {
+    logger.error(ERRORS.OFFER_ALREADY_APPROVED);
+    return res.status(400).json({ message: ERRORS.OFFER_ALREADY_APPROVED });
+  }
 
   const otherOffersFilter = {
     task: task._id,
