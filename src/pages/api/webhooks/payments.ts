@@ -113,7 +113,10 @@ export default async function handler(
 
   switch (eventType) {
     case "payment_intent.succeeded":
-      return handlePaymentIntentSucceeded(verificationResult.payload, res);
+      return await handlePaymentIntentSucceeded(
+        verificationResult.payload,
+        res
+      );
     default:
       const message = "Skipped Stripe Webhook";
       logger.info({ event: eventType }, message);
