@@ -80,7 +80,9 @@ export default function TaskItemPage() {
 
   const id = router.query.id as string;
   const hasAcceptedOffer = !!task?.acceptedOffer;
+
   const isTaskOwner = customerId === task?.customerId;
+  console.log({ isTaskOwner, customerId, taskCustomerId: task?.customerId });
 
   useEffect(() => {
     if (id) {
@@ -456,6 +458,8 @@ export function AcceptedOfferDetails({
     });
   }, []);
 
+  console.log({ isTaskOwner, isOfferCompleted });
+
   return (
     <div aria-label="Task Offers">
       <div className="sm:flex sm:items-center">
@@ -524,6 +528,7 @@ export function AcceptedOfferDetails({
               </dd>
             </div>
           )}
+
           {isTaskOwner && isOfferCompleted && (
             <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
               <dt className="text-sm font-medium leading-6 text-gray-900"></dt>
