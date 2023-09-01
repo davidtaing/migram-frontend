@@ -27,7 +27,7 @@ async function handlePaymentIntentSucceeded(
   const { id } = payload;
 
   let err, task, existingEvent;
-  [err, existingEvent] = await to(WebhookEventModel.findOne({ id }));
+  [err, existingEvent] = await to(WebhookEventModel.findOne({ _id: id }));
 
   if (existingEvent && existingEvent.status !== "rejected") {
     logger.info({ existingEvent }, "Duplicate Webhook Event");
