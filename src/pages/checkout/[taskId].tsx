@@ -76,7 +76,7 @@ export default function CheckoutForm() {
 
           {options.clientSecret && (
             <Elements stripe={stripePromise} options={options}>
-              <StripeCheckoutForm />
+              <StripeCheckoutForm taskId={taskId} />
             </Elements>
           )}
         </section>
@@ -216,7 +216,7 @@ export function OrderSummary({ acceptedOffer, task }: OrderSummaryProps) {
   );
 }
 
-export function StripeCheckoutForm() {
+export function StripeCheckoutForm({ taskId }: { taskId: string }) {
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState<string | undefined>();
@@ -235,7 +235,7 @@ export function StripeCheckoutForm() {
       elements,
       confirmParams: {
         // Make sure to change this to your payment completion page
-        return_url: `${process.env.NEXT_PUBLIC_STRIPE_RETURN_URL}/completion`,
+        return_url: `${process.env.NEXT_PUBLIC_STRIPE_RETURN_URL}/tasks/${taskId}`,
       },
     });
 
