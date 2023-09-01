@@ -55,7 +55,7 @@ async function handlePaymentIntentSucceeded(
 
   [err, task] = await to(
     TaskModel.findOneAndUpdate(
-      { id: taskId },
+      { _id: taskId },
       {
         paymentStatus: "Paid",
       }
