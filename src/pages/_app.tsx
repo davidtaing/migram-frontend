@@ -7,10 +7,12 @@ import { OnboardNewUserModal } from "@/components/OnboardNewUserModal";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <ClerkProvider>
-      <Header />
-      <OnboardNewUserModal />
-      <Component {...pageProps} />
-    </ClerkProvider>
+    <div className="bg-gray-100 min-h-screen">
+      <ClerkProvider>
+        <Header />
+        <OnboardNewUserModal />
+        <Component {...pageProps} />
+      </ClerkProvider>
+    </div>
   );
 }
