@@ -5,6 +5,7 @@ import { MapPinIcon, WrenchScrewdriverIcon } from "@heroicons/react/20/solid";
 import { Task, TaskStatus } from "@/types/schemas/Task";
 import { SignedIn } from "@clerk/nextjs";
 import { TaskStatusBadge } from "@/components/TaskStatusBadge";
+import Link from "next/link";
 
 type ServerTask = Omit<Task, "dueDate"> & { dueDate: string };
 type GetTasksResponse = { data: ServerTask[] };
@@ -25,7 +26,7 @@ export default function TasksPage() {
   }, []);
 
   return (
-    <div className="bg-white">
+    <div className="bg-grey-300">
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
         <div className="flex items-center justify-between">
           <h2 className="inline-block text-2xl font-bold tracking-tight text-gray-900">
@@ -43,36 +44,44 @@ export default function TasksPage() {
           </SignedIn>
         </div>
 
-        <div className="mt-8 grid gap-4 md:gap-y-10 sm:gap-x-6 md:grid-cols-3 lg:gap-x-8">
+        <div className="mt-8 flex flex-wrap gap-4 justify-between">
           {tasks.map((task: Task) => (
-            <div
-              key={task._id}
-              className="flex flex-col gap-4 text-gray-500 group relative border-2 border-gray-400 p-4 rounded-md hover:border-indigo-600 hover:text-indigo-600"
-            >
-              <h3 className="text-lg text-gray-700 font-bold group-hover:text-indigo-600">
-                <a href={`/tasks/${task._id}`}>
-                  <span className="absolute inset-0" />
-                  {task.shortDescription}
-                </a>
-              </h3>
-              <p className="mt-auto flex gap-2">
-                <WrenchScrewdriverIcon className="h-6 w-6" />
-                {task.category}
-              </p>
-              <p className="flex gap-2">
-                <MapPinIcon className="h-6 w-6" />
-                <span>{task.location.city}</span>
-              </p>
-              <p className="flex gap-2">
-                <TaskStatusBadge status={task.status} />
-              </p>
-              <p className="text-xl font-medium text-gray-900 group-hover:text-indigo-600">
-                ${task.budget}
-              </p>
-            </div>
+            <TaskCard key={task._id} task={task} />
           ))}
         </div>
       </div>
     </div>
   );
 }
+
+const TaskCard = ({ task }: { task: Task }) => {
+  const { _id, shortDescription, details, budget, category, status, location } =
+    task;
+
+  return (
+    <div className="flex-grow block max-w-sm rounded overflow-hidden shadow-lg bg-white my-4 p-6 hover:shadow-xl">
+      <Link className="flex flex-col h-full" href={`/tasks/${_id}`}>
+        <div className="flex-grow">
+          <div className="font-bold text-xl mb-2">{shortDescription}</div>
+          <p className="text-gray-700 text-base">{details}</p>
+        </div>
+        <div>
+          <div className="mt-6">
+            <span className="text-base text-gray-600">
+              {location.city} {location.postal_code}
+            </span>
+          </div>
+          <div className="mt-4">
+            <span className="inline-block bg-gray-300 text-gray-700 mr-2 items-center rounded-md px-2 py-1 text-xs font-medium">
+              {category}
+            </span>
+            <TaskStatusBadge status={status} />
+            <span className="float-right text-green-500 text-xl">
+              ${budget}
+            </span>
+          </div>
+        </div>
+      </Link>
+    </div>
+  );
+};
