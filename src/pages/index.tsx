@@ -1,87 +1,224 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { MapPinIcon, WrenchScrewdriverIcon } from "@heroicons/react/20/solid";
+import Head from "next/head";
 
-import { Task, TaskStatus } from "@/types/schemas/Task";
-import { SignedIn } from "@clerk/nextjs";
-import { TaskStatusBadge } from "@/components/TaskStatusBadge";
-import Link from "next/link";
-
-type ServerTask = Omit<Task, "dueDate"> & { dueDate: string };
-type GetTasksResponse = { data: ServerTask[] };
-
-export default function TasksPage() {
-  const [tasks, setTasks] = useState(new Array<Task>());
-
-  useEffect(() => {
-    const url = `${process.env.NEXT_PUBLIC_APP_URL}/api/tasks`;
-    axios.get<GetTasksResponse>(url).then((response) => {
-      const tasks: Task[] = response.data.data.map((task) => ({
-        ...task,
-        dueDate: new Date(task.dueDate),
-      }));
-
-      setTasks(tasks);
-    });
-  }, []);
-
+export default function Home() {
   return (
-    <div className="bg-grey-300">
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
-        <div className="flex items-center justify-between">
-          <h2 className="inline-block text-2xl font-bold tracking-tight text-gray-900">
-            Tasks
-          </h2>
-          <SignedIn>
-            <a href="/tasks/create">
-              <button
-                type="button"
-                className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                Create Task
-              </button>
-            </a>
-          </SignedIn>
-        </div>
+    <div>
+      <Head>
+        <title>
+          Migram.org - Empowering New Australians, One Task at a Time
+        </title>
+      </Head>
+      {/* Header Section */}
+      <section className="relative h-screen max-h-[800px] flex items-center justify-center py-12 px-4">
+        <div className="text-center">
+          <h1 className="text-5xl font-extrabold mb-4">
+            Empowering New Australians
+          </h1>
+          <p className="text-2xl mb-8">
+            Unlock Opportunities for Refugees and Migrants
+          </p>
 
-        <div className="mt-8 flex flex-wrap gap-4 justify-between">
-          {tasks.map((task: Task) => (
-            <TaskCard key={task._id} task={task} />
-          ))}
+          <a href="/sign-up">
+            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+              Join Us
+            </button>
+          </a>
         </div>
-      </div>
+      </section>
+
+      {/* Introduction Section */}
+      <section className="bg-white py-12 px-4 md:py-20">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl font-extrabold mb-8">Migram.org</h2>
+          <p className="text-lg mb-8">
+            Migram.org is a platform designed to empower refugees and migrants
+            in Australia by providing them with job opportunities. Here’s why
+            you should join our community:
+          </p>
+          <div className="flex flex-wrap justify-center">
+            <div className="w-full md:w-1/3 p-4">
+              <h3 className="text-xl font-bold mb-4">Community</h3>
+              <p>
+                Connect with a network of peers and employers who appreciate
+                your unique skills and experiences.
+              </p>
+            </div>
+            <div className="w-full md:w-1/3 p-4">
+              <h3 className="text-xl font-bold mb-4">Flexibility</h3>
+              <p>
+                Choose from a variety of jobs and tasks that fit your skills and
+                schedule.
+              </p>
+            </div>
+            <div className="w-full md:w-1/3 p-4">
+              <h3 className="text-xl font-bold mb-4">Support</h3>
+              <p>
+                Our dedicated support team is always available to assist you
+                with any questions or concerns.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* How It Works Section */}
+      <section className="bg-gray-100 py-12 px-4 md:py-20">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl font-extrabold mb-8">How It Works</h2>
+          <div className="flex flex-wrap justify-center">
+            <div className="w-full md:w-1/4 p-4">
+              <div className="text-center">
+                {/* Replace with an actual icon or image */}
+                <div className="mb-4">
+                  <i className="fas fa-user-plus text-4xl"></i>
+                </div>
+                <h3 className="text-xl font-bold mb-4">Sign Up</h3>
+                <p>
+                  Create a free account to get started. It's quick and easy!
+                </p>
+              </div>
+            </div>
+            <div className="w-full md:w-1/4 p-4">
+              <div className="text-center">
+                {/* Replace with an actual icon or image */}
+                <div className="mb-4">
+                  <i className="fas fa-search text-4xl"></i>
+                </div>
+                <h3 className="text-xl font-bold mb-4">Browse Jobs</h3>
+                <p>
+                  Explore a variety of jobs that suit your skills and interests.
+                </p>
+              </div>
+            </div>
+            <div className="w-full md:w-1/4 p-4">
+              <div className="text-center">
+                {/* Replace with an actual icon or image */}
+                <div className="mb-4">
+                  <i className="fas fa-paper-plane text-4xl"></i>
+                </div>
+                <h3 className="text-xl font-bold mb-4">Apply</h3>
+                <p>Apply for jobs with a single click. No hassle!</p>
+              </div>
+            </div>
+            <div className="w-full md:w-1/4 p-4">
+              <div className="text-center">
+                {/* Replace with an actual icon or image */}
+                <div className="mb-4">
+                  <i className="fas fa-thumbs-up text-4xl"></i>
+                </div>
+                <h3 className="text-xl font-bold mb-4">Get Hired</h3>
+                <p>
+                  Receive offers and start your journey with your new employer.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Collaboration Section */}
+      <section className="bg-white py-12 md:py-20 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl font-extrabold mb-8">
+            Our Collaboration Partners
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+            {/* Illawarra Multicultural Services */}
+            <div className="text-left">
+              <h3 className="text-xl font-bold mb-4">
+                Illawarra Multicultural Services (IMS)
+              </h3>
+              <p className="mb-4">
+                Located in Wollongong, IMS has been supporting the culturally &
+                linguistically diverse (CALD) population since August 1980. They
+                focus on migrants, humanitarian entrants, and refugees in the
+                Illawarra and Shoalhaven regions.
+              </p>
+              <p>
+                <a
+                  href="https://www.facebook.com/IMSpage"
+                  className="text-blue-600 hover:underline"
+                >
+                  Visit their Facebook page
+                </a>{" "}
+                or{" "}
+                <a
+                  href="https://www.instagram.com/IMS_insta"
+                  className="text-blue-600 hover:underline"
+                >
+                  Instagram
+                </a>{" "}
+                for more information.
+              </p>
+            </div>
+
+            {/* Code.Sydney */}
+            <div className="text-left">
+              <h3 className="text-xl font-bold mb-4">Code.Sydney</h3>
+              <p className="mb-4">
+                Code.Sydney connects new developers with non-profits and
+                charities to gain real-world experience. Their mission aligns
+                perfectly with ours, providing countless opportunities for
+                individuals to grow and contribute to society.
+              </p>
+              <p>
+                <a
+                  href="https://www.code.sydney/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  Visit Code.Sydney's website
+                </a>{" "}
+                for more information.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer Section */}
+      <footer className="bg-gray-800 text-white py-12 md:py-20 px-4">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-wrap justify-between">
+            <div className="w-full md:w-1/4 mb-8 md:mb-0">
+              <h3 className="text-lg font-semibold mb-4">About Us</h3>
+              <p>
+                We aim to create a welcoming community that facilitates job
+                opportunities for everyone, including refugees and migrants.
+              </p>
+            </div>
+            {/* <div className="w-full md:w-1/4 mb-8 md:mb-0">
+              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+              <ul>
+                <li>
+                  <a href="#how-it-works" className="text-sm hover:underline">
+                    How It Works
+                  </a>
+                </li>
+                <li>
+                  <a href="#testimonials" className="text-sm hover:underline">
+                    Testimonials
+                  </a>
+                </li>
+                <li>
+                  <a href="#contact" className="text-sm hover:underline">
+                    Contact Us
+                  </a>
+                </li>
+              </ul>
+            </div> */}
+            <div className="w-full md:w-1/4">
+              <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
+              <p>Email: dev@migram.org</p>
+            </div>
+          </div>
+          <div className="mt-8 text-center">
+            <p className="text-sm">
+              &copy; 2023 Migram.org. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
-
-const TaskCard = ({ task }: { task: Task }) => {
-  const { _id, shortDescription, details, budget, category, status, location } =
-    task;
-
-  return (
-    <div className="flex-grow block max-w-sm rounded overflow-hidden shadow-lg bg-white my-4 p-6 hover:shadow-xl">
-      <Link className="flex flex-col h-full" href={`/tasks/${_id}`}>
-        <div className="flex-grow">
-          <div className="font-bold text-xl mb-2">{shortDescription}</div>
-          <p className="text-gray-700 text-base">{details}</p>
-        </div>
-        <div>
-          <div className="mt-6">
-            <span className="text-base text-gray-600">
-              {location.city} {location.postal_code}
-            </span>
-          </div>
-          <div className="mt-4">
-            <span className="inline-block bg-gray-300 text-gray-700 mr-2 items-center rounded-md px-2 py-1 text-xs font-medium">
-              {category}
-            </span>
-            <TaskStatusBadge status={status} />
-            <span className="float-right text-green-500 text-xl">
-              ${budget}
-            </span>
-          </div>
-        </div>
-      </Link>
-    </div>
-  );
-};
