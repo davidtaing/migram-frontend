@@ -9,7 +9,7 @@ export default function Home() {
         </title>
       </Head>
       {/* Header Section */}
-      <section className="relative h-screen max-h-[800px] flex items-center justify-center py-12 px-4">
+      <section className="relative h-screen max-h-[800px] flex items-center justify-center py-12 px-4 bg-white">
         <div className="text-center">
           <h1 className="text-5xl font-extrabold mb-4">
             Empowering New Australians
@@ -20,14 +20,14 @@ export default function Home() {
 
           <a href="/sign-up">
             <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-              Join Us
+              Join The Team 🦘
             </button>
           </a>
         </div>
       </section>
 
       {/* Introduction Section */}
-      <section className="bg-white py-12 px-4 md:py-20">
+      <section className="bg-gray-100 py-12 px-4 md:py-20">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl font-extrabold mb-8">Migram.org</h2>
           <p className="text-lg mb-8">
@@ -61,7 +61,7 @@ export default function Home() {
         </div>
       </section>
       {/* How It Works Section */}
-      <section className="bg-gray-100 py-12 px-4 md:py-20">
+      <section className="bg-white py-12 px-4 md:py-20">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl font-extrabold mb-8">How It Works</h2>
           <div className="flex flex-wrap justify-center">
@@ -116,7 +116,7 @@ export default function Home() {
       </section>
 
       {/* Collaboration Section */}
-      <section className="bg-white py-12 md:py-20 px-4">
+      <section className="bg-gray-100 py-12 md:py-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl font-extrabold mb-8">
             Our Collaboration Partners
@@ -209,7 +209,9 @@ export default function Home() {
             </div> */}
             <div className="w-full md:w-1/4">
               <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
-              <p>Email: dev@migram.org</p>
+              <p>
+                Email: <a href="mailto:dev@migram.org">dev@migram.org</a>
+              </p>
             </div>
           </div>
           <div className="mt-8 text-center">
